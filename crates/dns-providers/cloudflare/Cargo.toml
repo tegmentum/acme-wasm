@@ -23,6 +23,4 @@ name = "acme_dns_provider_cloudflare"
 acme-challenge-dns-01 = { path = "../../challenge-dns-01" }
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
-async-trait = "0.1"
 thiserror = "1"
-url = "2"
