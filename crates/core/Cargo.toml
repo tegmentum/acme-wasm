@@ -55,7 +55,7 @@ url = "2"
 # cross-workspace path dep. Once acme-wasm ships a release the two
 # workspaces should publish independently and this becomes a crates.io
 # dep on `tegmentum-oauth2-core`.
-oauth2-core = { package = "tegmentum-oauth2-core", path = "../../../oauth2-wasm/crates/core" }
+oauth2-core = { package = "tegmentum-oauth2-core", path = "../../../oauth2-wasm/crates/core", version = "0.1.0" }
 
 # Optional reqwest-backed HttpClient implementation. Off by default so
 # wasm32-wasip2 builds — which cannot link reqwest's native TLS stack —
