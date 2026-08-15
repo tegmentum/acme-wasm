@@ -1,0 +1,48 @@
+[package]
+name = "acme-protocol"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+authors.workspace = true
+repository.workspace = true
+homepage.workspace = true
+keywords.workspace = true
+categories.workspace = true
+documentation = "https://docs.rs/acme-protocol"
+readme = "../../README.md"
+description = "ACME protocol component (tegmentum:acme 'protocol' world): thin wit-bindgen adapter over acme-core."
+
+[lib]
+# cdylib: cargo-component's wasm output.
+# rlib: lets `cargo test` build a native test binary that links against
+#       the crate; needed to run the #[cfg(test)] modules on the host.
+crate-type = ["cdylib", "rlib"]
+
+[dependencies]
+wit-bindgen = "0.60"
+# All protocol logic lives in acme-core (plain rlib, no wit-bindgen).
+# This crate is a thin adapter that translates between wit-bindgen types
+# and acme-core types.
+acme-core = { package = "tegmentum-acme-core", path = "../core" }
+
+[package.metadata.component]
+package = "tegmentum:acme-protocol"
+
+[package.metadata.component.target]
+path = "../../wit"
+world = "protocol"
+
+# The shared wit/ contains an `http-client` world that imports wasi:http,
+# so cargo-component must resolve wasi:http (and its transitive wasi:*
+# deps) even for crates whose target world does not use it. wit-deps
+# drops them into wit/deps/; we register them here so cargo-component's
+# resolver merges them into the target package.
+[package.metadata.component.target.dependencies]
+"wasi:http" = { path = "../../wit/deps/wasi-http" }
+"wasi:io" = { path = "../../wit/deps/io" }
+"wasi:clocks" = { path = "../../wit/deps/clocks" }
+"wasi:random" = { path = "../../wit/deps/random" }
+"wasi:cli" = { path = "../../wit/deps/cli" }
+"wasi:filesystem" = { path = "../../wit/deps/filesystem" }
+"wasi:sockets" = { path = "../../wit/deps/sockets" }

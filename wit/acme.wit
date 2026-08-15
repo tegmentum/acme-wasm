@@ -1,0 +1,42 @@
+package tegmentum:acme@0.1.0;
+
+/// Core ACME types shared across interfaces (RFC 8555).
+///
+/// Deliberately generic — nothing here mentions Let's Encrypt, ZeroSSL,
+/// or any specific ACME CA. All CA-specific behavior is expressed
+/// through the directory URL and standard extensions.
+interface types {
+    /// RFC 8555 §7.1.1 directory object — the CA's endpoint catalog.
+    /// The actual field set is TODO for the v0 scaffold; wiring up the
+    /// full record follows once `acme-core::directory` lands.
+    record directory-placeholder {
+        placeholder: string,
+    }
+
+    /// Placeholder error variant. The v0 scaffold intentionally keeps
+    /// this thin — the real variants (RFC 8555 §6.7 problem-document
+    /// error codes plus transport and JOSE parsing failures) are wired
+    /// once `acme-core::error` is filled in.
+    variant acme-error {
+        parse-error(string),
+        other(string),
+    }
+}
+
+/// Pure logic: directory parsing, JWS-with-nonce assembly, order /
+/// authorization / challenge state machines, CSR generation. No I/O,
+/// no wasi imports at the WIT layer. Embeddable in a browser bundle,
+/// CLI, or edge worker.
+world protocol {
+    export types;
+}
+
+/// Adds an HTTP capability so the component can drive an ACME order
+/// end-to-end (directory fetch, new-nonce, new-account, new-order,
+/// authorization poll, challenge post-as-get, finalize, certificate
+/// download). Importing `wasi:http/outgoing-handler` explicitly is the
+/// honest declaration of ambient authority.
+world http-client {
+    import wasi:http/outgoing-handler@0.2.3;
+    export types;
+}

@@ -1,0 +1,46 @@
+[package]
+name = "acme-http-client"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+authors.workspace = true
+repository.workspace = true
+homepage.workspace = true
+keywords.workspace = true
+categories.workspace = true
+documentation = "https://docs.rs/acme-http-client"
+readme = "../../README.md"
+description = "ACME client component that composes the pure acme-core logic with wasi:http/outgoing-handler for real-network directory / nonce / new-account / new-order / authorization / challenge / finalize / certificate round-trips."
+
+[lib]
+# cdylib: cargo-component's wasm output.
+# rlib: lets `cargo test` build a native test binary that links against
+#       the crate; needed to run the #[cfg(test)] modules on the host.
+crate-type = ["cdylib", "rlib"]
+
+[dependencies]
+wit-bindgen = "0.60"
+# All protocol logic lives in acme-core (plain rlib, no wit-bindgen).
+# This crate assembles wasi:http round-trips around acme-core's
+# request-shape builders and response parsers.
+acme-core = { package = "tegmentum-acme-core", path = "../core" }
+
+[package.metadata.component]
+package = "tegmentum:acme-http-client"
+
+[package.metadata.component.target]
+path = "../../wit"
+world = "http-client"
+
+# The shared wit/ contains an `http-client` world that imports wasi:http.
+# cargo-component needs the transitive wasi:* packages resolved via
+# wit-deps' wit/deps/ tree.
+[package.metadata.component.target.dependencies]
+"wasi:http" = { path = "../../wit/deps/wasi-http" }
+"wasi:io" = { path = "../../wit/deps/io" }
+"wasi:clocks" = { path = "../../wit/deps/clocks" }
+"wasi:random" = { path = "../../wit/deps/random" }
+"wasi:cli" = { path = "../../wit/deps/cli" }
+"wasi:filesystem" = { path = "../../wit/deps/filesystem" }
+"wasi:sockets" = { path = "../../wit/deps/sockets" }

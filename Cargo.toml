@@ -1,0 +1,37 @@
+[workspace]
+members = [
+    "crates/core",
+    "crates/protocol",
+    "crates/http-client",
+    "crates/challenge-tls-alpn-01",
+    "crates/challenge-http-01",
+    "crates/challenge-dns-01",
+    "crates/dns-providers/cloudflare",
+    "crates/testing",
+]
+# `testing` is a host-only helper (spins up pebble, exposes assertion
+# utilities) — it is not intended to build for wasm32-wasip2. Kept out
+# of default-members so `cargo component build` and plain
+# `cargo build`/`cargo check` skip it by default; `cargo test
+# --workspace` still exercises it on the host target.
+default-members = [
+    "crates/core",
+    "crates/protocol",
+    "crates/http-client",
+    "crates/challenge-tls-alpn-01",
+    "crates/challenge-http-01",
+    "crates/challenge-dns-01",
+    "crates/dns-providers/cloudflare",
+]
+resolver = "2"
+
+[workspace.package]
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.83"
+license = "MIT OR Apache-2.0"
+authors = ["Zachary Whitley <zachary.whitley@tegmentum.ai>"]
+repository = "https://github.com/tegmentum/acme-wasm"
+homepage = "https://github.com/tegmentum/acme-wasm"
+keywords = ["acme", "letsencrypt", "tls", "webassembly", "wasm"]
+categories = ["wasm", "cryptography", "web-programming"]

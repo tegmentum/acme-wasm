@@ -1,0 +1,24 @@
+[package]
+name = "acme-challenge-http-01"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+authors.workspace = true
+repository.workspace = true
+homepage.workspace = true
+keywords.workspace = true
+categories.workspace = true
+documentation = "https://docs.rs/acme-challenge-http-01"
+readme = "../../README.md"
+description = "RFC 8555 §8.3 HTTP-01 challenge solver: computes the /.well-known/acme-challenge/<token> key-authorization response body."
+
+[lib]
+# Plain rlib — no cdylib. Consumers plug the computed body into their
+# own HTTP handler (a wasi:http/incoming-handler component, a
+# `warp`/`axum` route, a `.well-known` directory on disk, whatever).
+name = "acme_challenge_http_01"
+
+[dependencies]
+acme-core = { package = "tegmentum-acme-core", path = "../core" }
+thiserror = "1"

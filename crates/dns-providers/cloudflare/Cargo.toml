@@ -1,0 +1,28 @@
+[package]
+name = "acme-dns-provider-cloudflare"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+authors.workspace = true
+repository.workspace = true
+homepage.workspace = true
+keywords.workspace = true
+categories.workspace = true
+documentation = "https://docs.rs/acme-dns-provider-cloudflare"
+readme = "../../../README.md"
+description = "Cloudflare DNS API implementation of acme-challenge-dns-01's DnsProvider trait — provisions _acme-challenge TXT records for DNS-01 validation."
+
+[lib]
+# Plain rlib. Provider crates carry no wit surface of their own; a
+# consuming Rust binary or wasi:http component instantiates the
+# provider with an API token and hands it to the DNS-01 solver.
+name = "acme_dns_provider_cloudflare"
+
+[dependencies]
+acme-challenge-dns-01 = { path = "../../challenge-dns-01" }
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+async-trait = "0.1"
+thiserror = "1"
+url = "2"

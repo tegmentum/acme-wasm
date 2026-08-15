@@ -1,0 +1,21 @@
+[package]
+name = "acme-testing"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+authors.workspace = true
+repository.workspace = true
+homepage.workspace = true
+keywords.workspace = true
+categories.workspace = true
+description = "Host-only integration-test helpers for acme-wasm — Pebble-based ACME server harness, in-process HTTP-01 responder, mock DnsProvider, assertion helpers."
+publish = false
+
+[lib]
+# Plain rlib, host-only. NOT part of default-members — this crate
+# never builds for wasm32-wasip2.
+name = "acme_testing"
+
+[dependencies]
+acme-core = { package = "tegmentum-acme-core", path = "../core" }

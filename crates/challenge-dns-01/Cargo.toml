@@ -1,0 +1,26 @@
+[package]
+name = "acme-challenge-dns-01"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+authors.workspace = true
+repository.workspace = true
+homepage.workspace = true
+keywords.workspace = true
+categories.workspace = true
+documentation = "https://docs.rs/acme-challenge-dns-01"
+readme = "../../README.md"
+description = "RFC 8555 §8.4 DNS-01 challenge solver plus the DnsProvider trait concrete provider crates implement. Ships the solver logic (SHA-256 key-authorization → base64url TXT record contents); each provider crate (dns-providers/cloudflare, etc.) supplies the record-provisioning transport."
+
+[lib]
+# Plain rlib — no cdylib.
+name = "acme_challenge_dns_01"
+
+[dependencies]
+acme-core = { package = "tegmentum-acme-core", path = "../core" }
+# `async_trait` avoids the "cannot return `impl Trait` from a trait
+# method" ergonomics tax on the `DnsProvider` trait; concrete
+# providers are typically async (HTTP calls to a DNS API).
+async-trait = "0.1"
+thiserror = "1"

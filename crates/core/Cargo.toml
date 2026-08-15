@@ -1,0 +1,57 @@
+[package]
+name = "tegmentum-acme-core"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+authors.workspace = true
+repository.workspace = true
+homepage.workspace = true
+keywords.workspace = true
+categories.workspace = true
+documentation = "https://docs.rs/tegmentum-acme-core"
+readme = "../../README.md"
+description = "Pure-Rust RFC 8555 ACME v2 primitives (directory, nonce, JWS-with-nonce, order / authorization / challenge state machines, CSR generation). No wit-bindgen, no wasi. Consumed by acme-wasm's component adapters and by host callers directly."
+
+[lib]
+# Plain rlib — no cdylib, no cargo-component metadata. The wit-typed
+# adapter lives in `acme-protocol`; this crate has no component-model
+# surface.
+#
+# Package renamed to tegmentum-acme-core on crates.io (defensive against
+# name squats on the bare `acme-core` slug); the Rust import path stays
+# `acme_core` so downstream `use acme_core::...` statements remain
+# stable across a possible future rename.
+name = "acme_core"
+
+[dependencies]
+# RFC 8555 payloads — every request / response body is JSON.
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+# base64url with no padding is the JWS / JWK / thumbprint encoding
+# (RFC 7515 §2, RFC 7638 §3).
+base64 = "0.22"
+# SHA-256 for key thumbprints (RFC 7638) and the challenge key
+# authorizations (RFC 8555 §8.1); SHA-384 for the ES384 signing path.
+sha2 = { version = "0.10", features = ["oid"] }
+# ACME account keys and CSR signing keys may be RSA (RS256 / RS384) or
+# ECDSA (ES256 / ES384). Ed25519 accounts are permitted by RFC 8555 §6.2
+# though most CAs do not yet accept EdDSA on account keys — kept
+# available so the primitive is ready when a CA turns it on.
+rsa = { version = "0.9", default-features = false, features = ["std"] }
+p256 = "0.13"
+p384 = "0.13"
+ed25519-dalek = "2"
+rand = "0.8"
+# X.509 parsing (issued certificate chain, order identifiers) and
+# PKCS#10 CSR construction for the finalize step (RFC 8555 §7.4).
+x509-cert = "0.2"
+rcgen = "0.13"
+thiserror = "1"
+url = "2"
+# JWS-with-nonce assembly reuses the RS256 / RS384 / ES256 / ES384
+# primitives already implemented in oauth2-core; this is a
+# cross-workspace path dep. Once acme-wasm ships a release the two
+# workspaces should publish independently and this becomes a crates.io
+# dep on `tegmentum-oauth2-core`.
+oauth2-core = { package = "tegmentum-oauth2-core", path = "../../../oauth2-wasm/crates/core" }
