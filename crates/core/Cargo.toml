@@ -38,11 +38,12 @@ sha2 = { version = "0.10", features = ["oid"] }
 # ECDSA (ES256 / ES384). Ed25519 accounts are permitted by RFC 8555 §6.2
 # though most CAs do not yet accept EdDSA on account keys — kept
 # available so the primitive is ready when a CA turns it on.
-rsa = { version = "0.9", default-features = false, features = ["std"] }
+rsa = { version = "0.9", default-features = false, features = ["std", "sha2"] }
 p256 = "0.13"
 p384 = "0.13"
-ed25519-dalek = "2"
+ed25519-dalek = { version = "2", features = ["rand_core"] }
 rand = "0.8"
+rand_core = { version = "0.6", features = ["getrandom"] }
 # X.509 parsing (issued certificate chain, order identifiers) and
 # PKCS#10 CSR construction for the finalize step (RFC 8555 §7.4).
 x509-cert = "0.2"
@@ -55,3 +56,15 @@ url = "2"
 # workspaces should publish independently and this becomes a crates.io
 # dep on `tegmentum-oauth2-core`.
 oauth2-core = { package = "tegmentum-oauth2-core", path = "../../../oauth2-wasm/crates/core" }
+
+# Optional reqwest-backed HttpClient implementation. Off by default so
+# wasm32-wasip2 builds — which cannot link reqwest's native TLS stack —
+# stay slim. Host callers that want a batteries-included transport turn
+# on `native-http`; the wit-typed adapter under `crates/http-client`
+# provides its own wasi:http-driven HttpClient instead.
+reqwest = { version = "0.12", default-features = false, features = ["blocking", "rustls-tls"], optional = true }
+
+[features]
+default = []
+native-http = ["dep:reqwest"]
+
