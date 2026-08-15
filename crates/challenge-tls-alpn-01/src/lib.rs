@@ -64,13 +64,28 @@ pub fn responder_cert(
     token: &str,
     account_key: &AccountKey,
 ) -> Result<TlsAlpn01Responder, TlsAlpn01Error> {
+    let key_auth = acme_core::challenge::compute_key_authorization(token, account_key);
+    responder_cert_from_key_authorization(identifier, &key_auth)
+}
+
+/// Build the responder cert from a pre-computed key authorization
+/// string. This is the shape [`acme_core::challenge::ChallengeSolver::arm`]
+/// hands the solver — the driver already computed the authorization
+/// from `(token, account_key)` before calling in.
+///
+/// Prefer [`responder_cert`] when you're building the responder
+/// outside a driver loop and already have the token + account key on
+/// hand — that path keeps the two crates hash-symmetric.
+pub fn responder_cert_from_key_authorization(
+    identifier: &str,
+    key_authorization: &str,
+) -> Result<TlsAlpn01Responder, TlsAlpn01Error> {
     // 1. Compute the raw SHA-256(key authorization). Note: acme-core's
     //    sha256_key_authorization returns the base64url-encoded form
     //    (used by DNS-01); TLS-ALPN-01 wants the raw 32 bytes to wrap
     //    in a DER OCTET STRING, so we compute here.
-    let key_auth = acme_core::challenge::compute_key_authorization(token, account_key);
     let mut hasher = Sha256::new();
-    hasher.update(key_auth.as_bytes());
+    hasher.update(key_authorization.as_bytes());
     let hash: [u8; 32] = hasher.finalize().into();
 
     // 2. DER-encode as an OCTET STRING: tag 0x04, length 0x20 (32),
