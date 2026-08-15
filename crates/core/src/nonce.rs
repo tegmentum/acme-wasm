@@ -47,7 +47,10 @@ impl ReplayNonceStore {
     /// Build a store bound to a specific `newNonce` URL. The store
     /// holds an `Arc` to the transport so it can be shared with the
     /// rest of the request pipeline.
-    pub fn new(new_nonce_url: impl Into<String>, transport: std::sync::Arc<dyn HttpClient>) -> Self {
+    pub fn new(
+        new_nonce_url: impl Into<String>,
+        transport: std::sync::Arc<dyn HttpClient>,
+    ) -> Self {
         Self {
             new_nonce_url: new_nonce_url.into(),
             transport,

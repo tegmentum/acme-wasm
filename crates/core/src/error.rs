@@ -153,7 +153,6 @@ pub enum AcmeError {
     BadRevoked(String),
 
     // -- Locally raised, non-RFC-8555 -----------------------------------
-
     /// HTTP-layer failure (connection reset, DNS timeout, TLS error,
     /// wasi:http trap) — everything the transport surfaces as "we
     /// never got a well-formed response".
@@ -352,7 +351,8 @@ mod tests {
 
     #[test]
     fn problem_from_response_parses_json_body() {
-        let body = br#"{"type":"urn:ietf:params:acme:error:orderNotReady","detail":"still pending"}"#;
+        let body =
+            br#"{"type":"urn:ietf:params:acme:error:orderNotReady","detail":"still pending"}"#;
         let err = problem_from_response(403, Some("application/problem+json"), body);
         match err {
             AcmeError::OrderNotReady(d) => assert_eq!(d, "still pending"),

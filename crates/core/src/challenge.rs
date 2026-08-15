@@ -194,15 +194,11 @@ pub fn poll_challenge_with_interval(
     ready.self_check()?;
 
     // Kick the CA. Payload is a literal empty JSON object per §7.5.1.
-    let _ = account
-        .post_kid(challenge_url, b"{}", transport)?
-        .ok()?;
+    let _ = account.post_kid(challenge_url, b"{}", transport)?.ok()?;
 
     let deadline = Instant::now() + timeout;
     loop {
-        let response = account
-            .post_kid(challenge_url, &[], transport)?
-            .ok()?;
+        let response = account.post_kid(challenge_url, &[], transport)?.ok()?;
         let challenge: Challenge = serde_json::from_slice(&response.body)?;
         match challenge.status_enum() {
             ChallengeStatus::Valid => {

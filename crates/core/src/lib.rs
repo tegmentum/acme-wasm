@@ -141,9 +141,9 @@ pub fn issue_certificate_with_timeouts(
         transport.as_ref(),
         finalize_timeout,
     )?;
-    let cert_url = final_order.certificate.ok_or_else(|| {
-        AcmeError::MissingField("certificate URL on valid order".into())
-    })?;
+    let cert_url = final_order
+        .certificate
+        .ok_or_else(|| AcmeError::MissingField("certificate URL on valid order".into()))?;
     certificate::download(&cert_url, &account, transport.as_ref())
 }
 
@@ -189,6 +189,10 @@ fn pick_solver_and_challenge<'a>(
     Err(AcmeError::UnsupportedIdentifier(format!(
         "no solver for identifier {}: challenges offered {:?}",
         authz.identifier.value,
-        authz.challenges.iter().map(|c| &c.type_).collect::<Vec<_>>()
+        authz
+            .challenges
+            .iter()
+            .map(|c| &c.type_)
+            .collect::<Vec<_>>()
     )))
 }

@@ -80,8 +80,7 @@ mod tests {
 
     /// The Let's Encrypt staging directory JSON, captured 2024-05.
     /// Kept in a fixture file so refreshing it does not touch source.
-    const STAGING_FIXTURE: &str =
-        include_str!("../fixtures/lets-encrypt-staging-directory.json");
+    const STAGING_FIXTURE: &str = include_str!("../fixtures/lets-encrypt-staging-directory.json");
 
     #[test]
     fn parses_lets_encrypt_staging_fixture() {
@@ -110,7 +109,11 @@ mod tests {
             dir.meta.terms_of_service.as_deref(),
             Some("https://letsencrypt.org/documents/LE-SA-v1.4-April-3-2024.pdf")
         );
-        assert!(dir.meta.caa_identities.iter().any(|s| s == "letsencrypt.org"));
+        assert!(dir
+            .meta
+            .caa_identities
+            .iter()
+            .any(|s| s == "letsencrypt.org"));
     }
 
     #[test]
@@ -151,8 +154,11 @@ mod tests {
             },
             calls: Mutex::new(vec![]),
         };
-        let dir = fetch("https://acme-staging-v02.api.letsencrypt.org/directory", &transport)
-            .expect("fetch");
+        let dir = fetch(
+            "https://acme-staging-v02.api.letsencrypt.org/directory",
+            &transport,
+        )
+        .expect("fetch");
         assert!(dir.new_nonce.starts_with("https://"));
         assert_eq!(
             transport.calls.lock().unwrap().as_slice(),

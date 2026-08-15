@@ -62,11 +62,7 @@ impl Authorization {
 }
 
 /// POST-as-GET the authorization URL and deserialize the response.
-pub fn fetch(
-    url: &str,
-    account: &Account,
-    transport: &dyn HttpClient,
-) -> Result<Authorization> {
+pub fn fetch(url: &str, account: &Account, transport: &dyn HttpClient) -> Result<Authorization> {
     let response = account.post_kid(url, &[], transport)?.ok()?;
     let authz: Authorization = serde_json::from_slice(&response.body)?;
     Ok(authz)

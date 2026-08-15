@@ -19,8 +19,16 @@ name = "acme_challenge_dns_01"
 
 [dependencies]
 acme-core = { package = "tegmentum-acme-core", path = "../core" }
-# `async_trait` avoids the "cannot return `impl Trait` from a trait
-# method" ergonomics tax on the `DnsProvider` trait; concrete
-# providers are typically async (HTTP calls to a DNS API).
-async-trait = "0.1"
+# SHA-256 of the key authorization → base64url TXT contents (RFC 8555
+# §8.4). Same primitive acme-core uses on the token/JWK path; taken
+# directly here since the solver receives the pre-computed key
+# authorization string.
+sha2 = "0.10"
+base64 = "0.22"
 thiserror = "1"
+
+[dev-dependencies]
+# Deterministic P-256 key material for the round-trip tests. acme-core
+# already pulls p256 transitively; taking a direct dev-dep just makes
+# `use p256::...` in tests explicit.
+p256 = { version = "0.13", default-features = false, features = ["ecdsa", "std"] }

@@ -22,3 +22,9 @@ name = "acme_challenge_http_01"
 [dependencies]
 acme-core = { package = "tegmentum-acme-core", path = "../core" }
 thiserror = "1"
+
+[dev-dependencies]
+# Deterministic P-256 key material for the round-trip tests. acme-core
+# already pulls p256 transitively; taking a direct dev-dep just makes
+# `use p256::...` in tests explicit.
+p256 = { version = "0.13", default-features = false, features = ["ecdsa", "std"] }

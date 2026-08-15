@@ -138,8 +138,7 @@ pub fn create_with_options(
     });
     let payload_bytes = serde_json::to_vec(&payload)?;
     let nonce = nonce_store.get()?;
-    let jws =
-        sign_jws_with_jwk(&payload_bytes, &directory.new_account, &nonce, &key)?;
+    let jws = sign_jws_with_jwk(&payload_bytes, &directory.new_account, &nonce, &key)?;
 
     let response = transport.post_jose(&directory.new_account, &jws)?;
     nonce_store.absorb(&response);
@@ -287,14 +286,7 @@ mod tests {
             posts: Mutex::new(vec![]),
         });
 
-        let err = create(
-            test_directory(),
-            &[],
-            true,
-            account_key,
-            transport,
-        )
-        .unwrap_err();
+        let err = create(test_directory(), &[], true, account_key, transport).unwrap_err();
         assert!(matches!(err, AcmeError::MissingField(_)), "got {err:?}");
     }
 

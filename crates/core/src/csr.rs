@@ -120,12 +120,7 @@ mod tests {
             .expect("valid PKCS#10 CertificationRequest DER");
         // Public key OID is ecPublicKey.
         assert_eq!(
-            parsed
-                .info
-                .public_key
-                .algorithm
-                .oid
-                .to_string(),
+            parsed.info.public_key.algorithm.oid.to_string(),
             "1.2.840.10045.2.1"
         );
     }

@@ -314,13 +314,8 @@ mod tests {
 
         let key = test_rsa_key();
         let payload = br#"{"termsOfServiceAgreed":true}"#;
-        let jws = sign_jws_with_jwk(
-            payload,
-            "https://acme.example/newAccount",
-            "abcdefgh",
-            &key,
-        )
-        .expect("sign");
+        let jws = sign_jws_with_jwk(payload, "https://acme.example/newAccount", "abcdefgh", &key)
+            .expect("sign");
 
         // Deserialize the flattened JWS and reconstruct the signing input.
         let v: Value = serde_json::from_slice(&jws).unwrap();
@@ -342,7 +337,9 @@ mod tests {
         assert_eq!(decode_b64url(payload_seg), payload);
 
         // The signature verifies against the public key.
-        let AccountKey::Rsa(sk) = key else { unreachable!() };
+        let AccountKey::Rsa(sk) = key else {
+            unreachable!()
+        };
         let pk = sk.to_public_key();
         let verifier: VerifyingKey<sha2::Sha256> = VerifyingKey::new(pk);
         let sig_bytes = decode_b64url(signature_seg);
@@ -362,9 +359,14 @@ mod tests {
         let key = AccountKey::Ecdsa(EcdsaKey::P256(sk));
 
         let payload = b"";
-        let jws =
-            sign_jws_with_kid(payload, "https://acme.example/order/1", "n1", "acct-42", &key)
-                .expect("sign");
+        let jws = sign_jws_with_kid(
+            payload,
+            "https://acme.example/order/1",
+            "n1",
+            "acct-42",
+            &key,
+        )
+        .expect("sign");
         let v: Value = serde_json::from_slice(&jws).unwrap();
         let protected = v["protected"].as_str().unwrap();
         let payload_seg = v["payload"].as_str().unwrap();

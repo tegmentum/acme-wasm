@@ -24,8 +24,15 @@ acme-core = { package = "tegmentum-acme-core", path = "../core" }
 # Self-signed cert construction. rcgen produces the DER we hand to the
 # TLS listener that presents the acme-tls/1 responder.
 rcgen = "0.13"
-# id-pe-acmeIdentifier OID (1.3.6.1.5.5.7.1.31) plus the CriticalExtension
-# encoding of the octet-string SHA-256 hash (RFC 8737 §3).
-x509-cert = "0.2"
 sha2 = "0.10"
 thiserror = "1"
+# rcgen uses `time::OffsetDateTime` for validity bounds; taking the
+# same crate at a compatible version keeps our not_before / not_after
+# construction stable.
+time = { version = "0.3", default-features = false, features = ["std"] }
+
+[dev-dependencies]
+# X.509 parsing to assert the acmeIdentifier extension is critical
+# and carries the expected DER OCTET STRING contents.
+x509-cert = "0.2"
+p256 = { version = "0.13", default-features = false, features = ["ecdsa", "std", "pkcs8"] }

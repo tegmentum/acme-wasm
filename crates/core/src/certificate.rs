@@ -32,7 +32,13 @@ pub fn finalize(
     account: &Account,
     transport: &dyn HttpClient,
 ) -> Result<Order> {
-    finalize_with_deadline(order, private_key, account, transport, DEFAULT_FINALIZE_TIMEOUT)
+    finalize_with_deadline(
+        order,
+        private_key,
+        account,
+        transport,
+        DEFAULT_FINALIZE_TIMEOUT,
+    )
 }
 
 /// Same as [`finalize`] with an explicit timeout — the finalize-poll
@@ -113,11 +119,7 @@ pub fn finalize_with_intervals(
 /// POST-as-GET the certificate URL. The response body is a PEM
 /// certificate chain (`application/pem-certificate-chain`) — leaf
 /// first, then each intermediate up to (but not including) the root.
-pub fn download(
-    cert_url: &str,
-    account: &Account,
-    transport: &dyn HttpClient,
-) -> Result<Vec<u8>> {
+pub fn download(cert_url: &str, account: &Account, transport: &dyn HttpClient) -> Result<Vec<u8>> {
     let response = account.post_kid(cert_url, &[], transport)?.ok()?;
     Ok(response.body)
 }

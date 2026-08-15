@@ -123,11 +123,7 @@ pub fn create(
 /// POST-as-GET the order URL to fetch its current state. Used both by
 /// [`crate::certificate::finalize`] and by callers that want to poll
 /// manually.
-pub fn refresh(
-    account: &Account,
-    order_url: &str,
-    transport: &dyn HttpClient,
-) -> Result<Order> {
+pub fn refresh(account: &Account, order_url: &str, transport: &dyn HttpClient) -> Result<Order> {
     let response = account.post_kid(order_url, &[], transport)?.ok()?;
     let mut order: Order = serde_json::from_slice(&response.body)?;
     order.url = order_url.to_string();
@@ -153,7 +149,10 @@ mod tests {
     fn status_enum_parses_known_states() {
         assert_eq!(OrderStatus::from_wire("pending"), OrderStatus::Pending);
         assert_eq!(OrderStatus::from_wire("ready"), OrderStatus::Ready);
-        assert_eq!(OrderStatus::from_wire("processing"), OrderStatus::Processing);
+        assert_eq!(
+            OrderStatus::from_wire("processing"),
+            OrderStatus::Processing
+        );
         assert_eq!(OrderStatus::from_wire("valid"), OrderStatus::Valid);
         assert_eq!(OrderStatus::from_wire("invalid"), OrderStatus::Invalid);
         assert_eq!(OrderStatus::from_wire("weird"), OrderStatus::Unknown);
