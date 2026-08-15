@@ -93,6 +93,36 @@ cargo component build --release --workspace
 `cargo test` runs the rlib unit tests on the host. `cargo component
 build` produces the wasip2 component artifacts under `target/`.
 
+## End-to-end integration tests (Pebble)
+
+`crates/testing/` ships a `PebbleHarness` that spins
+[Pebble](https://github.com/letsencrypt/pebble) (the Let's Encrypt
+team's official ACME-CA-for-testing) and
+[`pebble-challtestsrv`](https://github.com/letsencrypt/pebble/tree/main/cmd/pebble-challtestsrv)
+via `docker compose`, then drives the full RFC 8555 order flow through
+each of the three challenge types against it.
+
+All three tests are gated behind `#[ignore]` so a bare `cargo test`
+does not need Docker. To run one:
+
+```
+cargo test -p acme-testing --test http_01     -- --ignored --nocapture
+cargo test -p acme-testing --test tls_alpn_01 -- --ignored --nocapture
+cargo test -p acme-testing --test dns_01      -- --ignored --nocapture
+```
+
+Or run all three (each in its own `--test` binary, sequentially, so
+they don't race on ports 5001 / 5002 / 14000 / 15000 / 8055):
+
+```
+make test-e2e
+```
+
+The harness prefers `docker compose` (Docker CLI plugin) and falls
+back to the standalone `docker-compose` binary; either is fine.
+Container teardown happens in `PebbleHarness::Drop`; use `make
+clean-pebble` if a panic leaves a stack behind.
+
 ## Status
 
 v0.1 — pre-alpha. APIs, WIT worlds, and crate boundaries are all

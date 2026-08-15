@@ -18,4 +18,39 @@ publish = false
 name = "acme_testing"
 
 [dependencies]
-acme-core = { package = "tegmentum-acme-core", path = "../core" }
+# native-http gives us `ReqwestTransport`, wired against a customized
+# blocking reqwest client that trusts Pebble's self-signed CA.
+acme-core = { package = "tegmentum-acme-core", path = "../core", features = ["native-http"] }
+acme-challenge-http-01 = { path = "../challenge-http-01" }
+acme-challenge-tls-alpn-01 = { path = "../challenge-tls-alpn-01" }
+acme-challenge-dns-01 = { path = "../challenge-dns-01" }
+
+# Blocking HTTP for the challtestsrv admin API + the ACME transport.
+# rustls-tls (not native-tls) so we can inject Pebble's minica.
+reqwest = { version = "0.12", default-features = false, features = ["blocking", "rustls-tls", "json"] }
+rustls-pemfile = "2"
+
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+thiserror = "1"
+tempfile = "3"
+
+# For hashing the key authorization → DNS-01 TXT record value in the
+# DnsSolverAdapter. acme-core exposes a `(token, account_key)` helper
+# but the solver adapter only receives the pre-computed key
+# authorization; hashing it directly keeps the adapter driver-agnostic.
+sha2 = "0.10"
+base64 = "0.22"
+
+# Sync TLS acceptor for the TLS-ALPN-01 responder. rustls 0.23 sync
+# path — no tokio needed for a one-connection challenge server.
+rustls = { version = "0.23", default-features = false, features = ["std", "ring"] }
+rcgen = "0.13"
+
+# For SAN extraction in the assertion helpers.
+x509-cert = "0.2"
+
+# The two challenge crates plus acme-core all pull p256 transitively;
+# taking a direct dep just makes the account-key construction explicit.
+p256 = { version = "0.13", default-features = false, features = ["ecdsa", "std"] }
+rand = "0.8"
