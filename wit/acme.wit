@@ -4,31 +4,154 @@ package tegmentum:acme@0.1.0;
 ///
 /// Deliberately generic — nothing here mentions Let's Encrypt, ZeroSSL,
 /// or any specific ACME CA. All CA-specific behavior is expressed
-/// through the directory URL and standard extensions.
+/// through the directory URL and standard extensions. Consumers speak
+/// the operator-level verbs on `solver` and `orchestrator`; the full
+/// RFC 8555 state machine (directory / newNonce / newAccount / newOrder
+/// / authorization / challenge / finalize) stays inside `acme-core`.
 interface types {
-    /// RFC 8555 §7.1.1 directory object — the CA's endpoint catalog.
-    /// The actual field set is TODO for the v0 scaffold; wiring up the
-    /// full record follows once `acme-core::directory` lands.
-    record directory-placeholder {
-        placeholder: string,
+    /// RFC 8555 §7.1.4 identifier — the thing being validated.
+    /// `kind` is the wire type ("dns" for DNS names per §7.1.4, "ip"
+    /// per RFC 8738); `value` is the identifier itself. Unknown kinds
+    /// pass through unchanged so downstream extensions keep working.
+    record identifier {
+        kind: string,
+        value: string,
     }
 
-    /// Placeholder error variant. The v0 scaffold intentionally keeps
-    /// this thin — the real variants (RFC 8555 §6.7 problem-document
-    /// error codes plus transport and JOSE parsing failures) are wired
-    /// once `acme-core::error` is filled in.
+    /// Classification of a challenge object by its `type` field. WIT
+    /// labels cannot start with a digit, so the RFC's `http-01` /
+    /// `dns-01` / `tls-alpn-01` collapse the trailing hyphen: read
+    /// `http01` as `http-01`, and so on. `unknown` is the forward-compat
+    /// bucket for challenge types this WIT surface has not enumerated
+    /// (e.g. `device-attest-01`).
+    variant challenge-kind {
+        http01,
+        dns01,
+        tls-alpn01,
+        unknown,
+    }
+
+    /// Errors from the ACME surface. The RFC 8555 §6.7 problem-document
+    /// codes each map to one variant; `transport`, `serialization`,
+    /// `jose`, `timeout`, `missing-field`, `http`, and `other` are
+    /// locally raised (network, JSON, JWS, polling, missing header/field,
+    /// non-problem-JSON HTTP failures, and a catch-all respectively).
     variant acme-error {
-        parse-error(string),
+        bad-csr(string),
+        bad-nonce(string),
+        bad-public-key(string),
+        bad-revocation-reason(string),
+        bad-signature-algorithm(string),
+        caa(string),
+        compound(string),
+        connection(string),
+        dns(string),
+        external-account-required(string),
+        incorrect-response(string),
+        invalid-contact(string),
+        malformed(string),
+        order-not-ready(string),
+        rate-limited(string),
+        rejected-identifier(string),
+        server-internal(string),
+        tls(string),
+        unauthorized(string),
+        unsupported-contact(string),
+        unsupported-identifier(string),
+        user-action-required(string),
+        account-does-not-exist(string),
+        already-revoked(string),
+        bad-revoked(string),
+        transport(string),
+        serialization(string),
+        jose(string),
+        timeout(string),
+        missing-field(string),
+        http(tuple<u16, string>),
         other(string),
+    }
+
+    /// Result of a successful issuance. `pem-chain` is the CA's
+    /// `application/pem-certificate-chain` body (leaf first, then
+    /// intermediates); `private-key-pkcs8` is the DER-encoded PKCS#8
+    /// private key that matches the leaf.
+    record issued-certificate {
+        pem-chain: list<u8>,
+        private-key-pkcs8: list<u8>,
     }
 }
 
-/// Pure logic: directory parsing, JWS-with-nonce assembly, order /
-/// authorization / challenge state machines, CSR generation. No I/O,
-/// no wasi imports at the WIT layer. Embeddable in a browser bundle,
-/// CLI, or edge worker.
+/// Challenge-solver primitives that a component can call without
+/// standing up a full ACME flow. The pure building blocks live here so
+/// a consumer can, for example, arm a TLS-ALPN-01 responder from a
+/// pre-computed key authorization without depending on the orchestrator
+/// or on any HTTP capability.
+interface solver {
+    use types.{identifier};
+
+    /// RFC 8737 TLS-ALPN-01 responder cert builder.
+    ///
+    /// The resource is stateless — the constructor exists only to hand
+    /// callers a handle they can dispose of. `responder-cert` builds
+    /// the self-signed leaf carrying the `acmeIdentifier` extension
+    /// (OID 1.3.6.1.5.5.7.1.31), marked critical, whose extnValue is
+    /// the DER-encoded OCTET STRING of SHA-256 over the §8.1 key
+    /// authorization.
+    resource tls-alpn01-solver {
+        constructor();
+
+        /// Build the responder cert for `id` and `key-authorization`.
+        /// Returns `(cert-der, key-pkcs8-der)` on success — both blobs
+        /// are ready to hand to a TLS acceptor's cert-resolver keyed
+        /// on the `acme-tls/1` ALPN protocol. On failure, returns the
+        /// stringified `rcgen` error.
+        responder-cert: func(
+            id: identifier,
+            key-authorization: string,
+        ) -> result<tuple<list<u8>, list<u8>>, string>;
+    }
+}
+
+/// End-to-end ACME issuance verb.
+///
+/// The signature deliberately omits any HTTP capability — this crate
+/// is I/O-free. A consumer that wants a self-contained issuance
+/// component composes this world with `acme-http-client` via `wac plug`
+/// (or provides its own `HttpClient` impl and drives `acme-core`
+/// directly). Calling `issue-certificate` on the raw `acme-protocol`
+/// component without composition returns
+/// `acme-error::other("...requires wac composition with an
+/// HTTP-providing component...")`.
+interface orchestrator {
+    use types.{identifier, acme-error, issued-certificate};
+
+    /// Run the full RFC 8555 order flow for the given identifiers:
+    /// directory fetch → newAccount → newOrder → per-authorization
+    /// challenge → finalize → certificate download.
+    ///
+    /// - `directory-url`: the CA's RFC 8555 §7.1.1 directory URL.
+    /// - `contact`: RFC 8555 §7.3 contact URIs (e.g. `mailto:x@y`).
+    /// - `identifiers`: SAN list for the resulting cert.
+    /// - `cert-key-pem`: PKCS#8 PEM private key that will match the
+    ///   leaf; the caller owns key generation and persistence.
+    /// - `account-key-jwk`: JWK JSON of the account signing key.
+    issue-certificate: func(
+        directory-url: string,
+        contact: list<string>,
+        identifiers: list<identifier>,
+        cert-key-pem: string,
+        account-key-jwk: string,
+    ) -> result<issued-certificate, acme-error>;
+}
+
+/// Pure logic: TLS-ALPN-01 responder-cert construction, error shapes,
+/// and a placeholder orchestrator entry point that reports the need
+/// for composition. No I/O, no wasi imports at the WIT layer.
+/// Embeddable in a browser bundle, CLI, or edge worker.
 world protocol {
     export types;
+    export solver;
+    export orchestrator;
 }
 
 /// Adds an HTTP capability so the component can drive an ACME order

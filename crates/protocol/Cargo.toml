@@ -25,6 +25,10 @@ wit-bindgen = "0.60"
 # This crate is a thin adapter that translates between wit-bindgen types
 # and acme-core types.
 acme-core = { package = "tegmentum-acme-core", path = "../core" }
+# The `solver` interface's `tls-alpn01-solver` resource wraps the
+# RFC 8737 responder-cert builder that lives in this crate. Kept as a
+# direct dep so the WIT export layer stays a thin translation.
+acme-challenge-tls-alpn-01 = { package = "acme-challenge-tls-alpn-01", path = "../challenge-tls-alpn-01" }
 
 [package.metadata.component]
 package = "tegmentum:acme-protocol"
