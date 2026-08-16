@@ -1,5 +1,32 @@
 //! acme-core — plain-Rust RFC 8555 ACME v2 primitives.
 //!
+//! # Example
+//!
+//! Constructing the shapes the state machine consumes — an
+//! [`order::Identifier`] to cover a DNS name plus an [`jws::AccountKey`]
+//! that signs every request:
+//!
+//! ```
+//! use acme_core::jws::{AccountKey, EcdsaKey};
+//! use acme_core::order::Identifier;
+//! use p256::ecdsa::SigningKey;
+//!
+//! let id = Identifier::dns("example.com");
+//! assert_eq!(id.kind, "dns");
+//! assert_eq!(id.value, "example.com");
+//!
+//! // Deterministic key just for the doctest — a real deployment
+//! // generates fresh randomness.
+//! let signing = SigningKey::from_slice(&[0x11u8; 32]).unwrap();
+//! let account = AccountKey::Ecdsa(EcdsaKey::P256(signing));
+//! assert_eq!(account.alg(), "ES256");
+//! ```
+//!
+//! End-to-end certificate issuance flows through
+//! [`issue_certificate`]; see its docs for the full sequence
+//! (directory → account → order → authorization → challenge → finalize
+//! → download).
+//!
 //! This crate holds the domain types and pure logic for the ACME
 //! protocol (RFC 8555), the TLS-ALPN-01 challenge (RFC 8737), and the
 //! HTTP-01 / DNS-01 challenges from RFC 8555 §8.3 / §8.4. It does not
